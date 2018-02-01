@@ -1,0 +1,157 @@
+#!/bin/bash
+
+set -e
+
+cd /etc/apache2/sites-available
+
+proxysite_common () {
+    # Internal utility used by proxysite_ssl and proxysite_nossl. Do not call directly
+    # Parameters - same as proxysite_nossl / _ssl
+    # Will emit text on stdout.
+    DESTHOST="$1"
+    shift 2
+    
+    if [ -z "$1" ]; then
+	echo "proxysite: missing configuration name or domain list"
+	exit 5
+    fi
+
+    echo "ServerName $1"
+    shift
+    for SERVER in "$@"; do
+	echo "ServerAlias $SERVER"
+    done
+    cat <<EOF
+        Include sites-available/common-vhost.conf
+
+        ProxyPass /.well-known/acme-challenge !
+        ProxyPass / http://$DESTHOST/
+        ProxyPassReverse / http://$DESTHOST/
+</VirtualHost>
+EOF
+}
+
+proxysite_nossl () {
+    # Parameters:
+    # $1 - destination host/IP with port
+    # $2 - configuration name
+    # $3 and on - list of domains. 
+    
+    FILENAME="$2-80.conf"
+    PRIMARYNAME="$2"
+    DESTHOST="$1"
+
+    cat > "$FILENAME" <<EOF
+<VirtualHost *:80>
+        RequestHeader set X-Forwarded-Proto "http"
+        RequestHeader set X-Forwarded-Port "80"
+EOF
+    proxysite_common "$@" >> "$FILENAME"
+    a2ensite "$PRIMARYNAME-80"
+}
+
+proxysite_ssl () {
+    # Parameters:
+    # $1 - destination host/IP with port
+    # $2 - configuration name
+    # $3 and on - list of domains
+    
+    FILENAME="$2-443.conf"
+    PRIMARYNAME="$2"
+    DESTHOST="$1"
+
+    cat > "$FILENAME" <<EOF
+<IfModule mod_ssl.c>
+<VirtualHost *:443>
+        # SSLProxyEngine On   needed if passing to https below
+        RequestHeader set X-Forwarded-Proto "https"
+        RequestHeader set X-Forwarded-Port "443"
+        Include sites-available/ssl.common
+EOF
+    proxysite_common "$@" >> "$FILENAME"
+    
+    shift 2
+    
+    for ASDF in "$@"; do
+	echo "-d $ASDF" >> /etc/apache2/local-certbot-domainlist.txt
+    done
+    echo '</IfModule>' >> "$FILENAME"
+    a2ensite "$PRIMARYNAME-443"
+}
+
+proxy_acme () {
+    # Proxy an ACME request on port 80 to the destination.
+    # Parameters:
+    # #1 - destination host/ip WITH port.  Might often be something:81
+    # $2 and on - list of domains.  $2 will be the configuration name.
+    DEST="$1"
+    PRIMARYNAME="$2"
+    FILENAME="$2-80.conf"
+    shift
+    cat > "$FILENAME" <<EOF
+<VirtualHost *:80>
+ServerName $1
+EOF
+    for ASDF in "$@"; do
+	echo "ServerAlias $ASDF" >> "$FILENAME"
+    done
+    
+    cat >> "$FILENAME" <<EOF
+        Include sites-available/common-vhost.conf
+        ProxyPass "/.well-known/acme-challenge" "http://$DEST/.well-known/acme-challenge" 
+        ProxyPreserveHost On
+
+</VirtualHost>
+EOF
+    a2ensite "$PRIMARYNAME-80"
+}
+
+proxysite_both () {
+    # Parameters:
+    # $1 - destination host/ip WITH port
+    # $2 and on - list of domains.  $2 will be the configuration name.
+    proxysite_nossl "$@"
+    proxysite_ssl "$@"
+}
+
+redirectsite_nossl () {
+    # Parameters: $1 - site to receive
+    # $2 - destination URL
+    FILENAME="$1-80.conf"
+    cat > "$FILENAME" <<EOF
+<VirtualHost *:80>
+ServerName $1
+Include sites-available/common-vhost.conf                                                 
+
+RewriteEngine On
+RewriteRule ^/.well-known/acme-challenge - [L]
+
+RewriteRule ^(.*)$ $2\$1
+</VirtualHost>
+EOF
+    a2ensite "$1-80"
+}
+
+redirectsite_ssl () {
+    # Parameters: $1 - site to receive
+    # $2 - destination URL
+    FILENAME="$1-443.conf"
+    echo "-d $1" >> /etc/apache2/local-certbot-domainlist.txt
+    cat > "$FILENAME" <<EOF
+<IfModule mod_ssl.c>
+<VirtualHost *:443>
+ServerName $1
+Include sites-available/ssl.common
+Include sites-available/common-vhost.conf                                                 
+RedirectMatch permanent ^(.*)\$ $2\$1
+</VirtualHost>
+</IfModule>
+EOF
+    a2ensite "$1-443"
+}
+
+redirectsite_both () {
+    redirectsite_nossl "$1" "$2"
+    redirectsite_ssl "$1" "$2"
+}
+

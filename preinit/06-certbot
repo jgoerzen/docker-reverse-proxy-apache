@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -e
+set -x
+set -v
+echo "Generating SSL cert...."
+
+# So we can answer the challenge
+service apache2 start
+
+certbot \
+	--expand -i apache -a webroot -w /var/www/webproxy-root --preferred-challenges=http \
+	`sort /etc/apache2/local-certbot-domainlist.txt` \
+   -m jgoerzen@complete.org \
+   --agree-tos --no-redirect \
+   --non-interactive
+
+service apache2 stop || true
+
+echo "Removing $0"
+rm -v "$0"
+

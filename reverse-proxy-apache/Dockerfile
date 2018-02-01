@@ -6,6 +6,7 @@ COPY sites-available/ /etc/apache2/sites-available/
 
 RUN a2enmod proxy proxy_http headers rewrite && \
     a2enconf docker-ssl docker-log && \
+    touch /etc/apache2/local-certbot-domainlist.txt && \
     apache2ctl configtest && \
     /usr/local/bin/docker-wipelogs
 
