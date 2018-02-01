@@ -78,7 +78,33 @@ client.
 The reverse-proxy-apache setup included here will set both of these
 headers appropriately.
 
+It is not necessary to expose ports using `-p` or `-P` from this
+container, since the reverse proxy server does so.
 
+Please see the comments below under Recommended Volumes.
+
+# Reverse proxy server
+
+This server rece
+
+LETSENCRYPT_GEN
+LETSENCRYPT_EMAIL
+
+# Recommended Volumes
+
+I recommend that you add `VOLUME ["/var/log/apache2"]` to your
+Dockerfile for both containers, and `VOLUME ["/etc/letsencrypt"]` to
+your reverse proxy container.  When rebuilding and restarting your
+containers, use a sequence such as:
+
+   docker stop web
+   docker rename web web.old
+   docker run <<parameters>> --volumes-from=web.old  --name-web ....
+   docker rm web.old
+   
+This will let your logs persist, and will avoid unnecessary calls to
+letsencrypt to obtain new certs.  The latter is important to avoid
+false expiration emails and hitting their rate limiting.
 
 # Copyright
 

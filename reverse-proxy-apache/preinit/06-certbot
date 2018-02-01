@@ -3,6 +3,13 @@
 set -e
 set -x
 set -v
+
+if [ -z "$LETSENCRYPT_EMAIL" ]; then
+        echo "letsencrypt generation disabled; exiting."
+        echo "Set LETSENCRYPT_EMAIL to enable"
+        exit 0
+fi
+
 echo "Generating SSL cert...."
 
 # So we can answer the challenge
@@ -11,7 +18,7 @@ service apache2 start
 certbot \
 	--expand -i apache -a webroot -w /var/www/webproxy-root --preferred-challenges=http \
 	`sort /etc/apache2/local-certbot-domainlist.txt` \
-   -m jgoerzen@complete.org \
+   -m "$LETSENCRYPT_EMAIL" \
    --agree-tos --no-redirect \
    --non-interactive
 
