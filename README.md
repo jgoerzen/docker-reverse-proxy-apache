@@ -31,10 +31,11 @@ use.  One easy way is to use `docker net create proxynet` and then
 make sure to say `--net=proxynet` and set a `--name` on your calls to
 `docker run`.
 
-# The proxied application
+# The proxied application (jgoerzen/proxied-app-apache)
 
 Let's talk about the proxied application first.  This is where you run
-your web applications -- blogs, wikis, whatever.
+your web applications -- blogs, wikis, whatever.  This is a base image
+for you to build upon.
 
 ## Use
 
@@ -85,14 +86,134 @@ container, since the reverse proxy server does so.
 
 Please see the comments below under Recommended Volumes.
 
-# Reverse proxy server
+# Reverse proxy server (jgoerzen/reverse-proxy-apache)
 
-This server receives connections 
+This server receives connections and dispatches them to your other
+Docker containers.  It also is fully integrated with the letsencrypt
+project, automatically requesting and renewing your SSL certificates
+if you'd like.
 
-LETSENCRYPT_EMAIL
+You can build upon this image, but it should need very little
+tweaking.
+
+There are three core things that you can do with this image as-is:
+
+ 1. Proxy (almost) all requests to a site to the Docker container
+    hosting it.  "Almost" because letsencrypt verification requests
+    are intercepted and handled here.
+ 2. Perform simple redirects (eg, example.com -> www.example.com)
+ 3. Proxy letsencrypt (ACME) requests ONLY (for when you are running
+    letsencrypt in your target container)
+
+## Site setup
+
+In your Dockerfile, you'll use RUN to call `docker-setupsites` to
+provision configurations.  I'll cover each of the above three cases
+here.
+
+### Site setup, case 1: proxying requests to a Docker container
+
+There are three `docker-setupsites` subcommands here:
+`proxysite_ssl`, `proxysite_nossl`, and `proxysite_both`.  They all
+take the same parameters and differ only in how they handle SSL.  The
+first parameter is the target (which should almost always be port 80,
+since we do SSL termination here), the second is the name of the
+configuration, and the third and following are a list of one or more
+domains.  Examples:
+
+    docker-setupsites proxysite_both "wordpress.proxynet:80" wordpress-sites  \
+          blog.example.com news.example.com
+    
+    docker-setupsites proxysite_nossl "mainweb.proxynet:80" mainweb \
+          www.example.com
+
+This will cause configurations to be created for blog.example.com and
+news.example.com, in both SSL and non-SSL versions, directing traffic
+to wordpress.proxynet:80 (saved, incidentally, in configuration files
+named wordpress-sites.80.conf and wordpress-sites.443.conf).  If
+letsencrypt generation is used, SSL certificates for blog.example.com
+and news.example.com will be automatically handled.  Also,
+www.example.com will have its traffic sent to mainweb.proxynet:80.
+
+### Site setup, case 2: redirect sites
+
+This is very similar - the subcommands are `redirectside_ssl`,
+`redirectsite_nossl`, and `redirectsite_both`.  They take exactly two
+parameters - the source for redirection as a site, and a target URL,
+neither of which should have a trailing slash.
+
+For instance:
+
+    docker-setupsites redirectsite_both example.com https://www.example.com
+    docker-setupsites redirectsite_nossl happenings.example.com http://news.example.com
+    docker-setupsites redirectsite_ssl happenings.example.com https://news.example.com
+   
+In this case, a request for either `http://example.com` or
+`https://example.com` will be sent to `https://www.example.com`.  Note
+that this will tend to push people to SSL.  Becuase we redirect an
+entire site, `http://example.com/linux` will be sent to
+`https://www.example.com/linux` as well.
+
+When you use `redirectsite_ssl` or `redirectsite_both`, your target
+should always be an `https` URL, so you can avoid the user getting
+warnings about an insecure redirect.  Sometimes you do not wish to
+push people into SSL.  The second and third lines in the example above
+demonstrate that situation, where the non-SSL and SSL redirects go to
+`http` or `https` URLs, respectively.
+
+### Site setup, case 3: ACME redirects
+
+Sometimes, you need only to proxy ACME to a destination.  Perhaps, for
+instance, you're running an IMAP server and have a local certbot
+there.  With all of the instances in cases 1 and 2, ACME verification
+requests are intercepted and handled locally.  This inverts the sense;
+ONLY ACME verification requests are sent.
+
+Here's an example:
+
+    docker-setupsites proxy_acme "imap.proxynet:81" \
+         imap.example.com smtp.example.com
+    
+In this case, inbound requests on port 80 (these are always non-SSL
+requests) for imap.example.com and smtp.example.com will be sent to
+port 81 on imap.proxynet, where you have presumably set up certbot to
+listen.
+
+## Letsencrypt handling
+
+By default, letsencrypt handling is not enabled.  If you wish to
+handle SSL on your own, you will need to `a2enmod ssl` and make some
+modifications to the SSL config files.  However, if you want
+letsencrypt to handle it, do *NOT* `a2enmod ssl` but rather set the
+`LETSENCRYPT_EMAIL` environment variable to your container.
+
+When `LETSENCRYPT_EMAIL` is set, then When your container first
+starts, a pre-init script will do this:
+
+ - First, it will start Apache on the non-SSL ports only.  (The SSL
+   configurations generated by docker-setupsites are all wrapped in
+   `IfModule` for SSL, and SSL isn't enabled yet, which is good,
+   because we don't have a valid configuration yet.)  This is to
+   answer the certbot validation requests.
+ - Then, it sends off an automated certbot request and waits for the
+   answers.
+ - It lets certbot install its certs and enable SSL in Apache as
+   appropriate.
+ - The pre-init script then deletes itself and proceeds with the boot.
+ 
+A cron job in the container will handle updates and revalidation of
+your certs.
+
+## Final note
 
 Finally, make sure to end your Dockerfile with `CMD ["/usr/local/bin/boot-debian-base"]`.
 
+
+# Recommended Parameters
+
+I recommend you to run your containers with:
+
+`--stop-signal=SIGPWR -t -d --net=whatever`
 
 # Recommended Volumes
 
