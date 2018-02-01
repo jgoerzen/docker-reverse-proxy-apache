@@ -61,6 +61,8 @@ authorize *any* internal host as your source, a common way would be
 on a separate Docker network and only authorize it.  Even better, give
 your reverse proxy an `--ip` and authorize only that.
 
+Finally, make sure to end your Dockerfile with `CMD ["/usr/local/bin/boot-debian-base"]`.
+
 ## Internal details
 
 There are a couple of interesting issues here.  First, the IP address
@@ -85,10 +87,12 @@ Please see the comments below under Recommended Volumes.
 
 # Reverse proxy server
 
-This server rece
+This server receives connections 
 
-LETSENCRYPT_GEN
 LETSENCRYPT_EMAIL
+
+Finally, make sure to end your Dockerfile with `CMD ["/usr/local/bin/boot-debian-base"]`.
+
 
 # Recommended Volumes
 

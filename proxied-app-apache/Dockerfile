@@ -10,4 +10,4 @@ RUN touch /etc/apache2/authorized-proxies.txt && \
     apache2ctl configtest && \
     /usr/local/bin/docker-wipelogs
 
-
+CMD ["/usr/local/bin/boot-debian-base"]

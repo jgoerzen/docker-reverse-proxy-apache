@@ -11,4 +11,5 @@ RUN a2enmod proxy proxy_http headers rewrite && \
     apache2ctl configtest && \
     /usr/local/bin/docker-wipelogs
 
-
+EXPOSE 80 443
+CMD ["/usr/local/bin/boot-debian-base"]
