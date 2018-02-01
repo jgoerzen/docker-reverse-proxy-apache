@@ -22,7 +22,7 @@ proxysite_common () {
 	echo "ServerAlias $SERVER"
     done
     cat <<EOF
-        Include sites-available/common-vhost.conf
+        Include sites-available/common-vhost
 
         ProxyPass /.well-known/acme-challenge !
         ProxyPass / http://$DESTHOST/
@@ -66,7 +66,7 @@ proxysite_ssl () {
         # SSLProxyEngine On   needed if passing to https below
         RequestHeader set X-Forwarded-Proto "https"
         RequestHeader set X-Forwarded-Port "443"
-        Include sites-available/ssl.common
+        Include sites-available/ssl-common
 EOF
     proxysite_common "$@" >> "$FILENAME"
     
@@ -97,7 +97,7 @@ EOF
     done
     
     cat >> "$FILENAME" <<EOF
-        Include sites-available/common-vhost.conf
+        Include sites-available/common-vhost
         ProxyPass "/.well-known/acme-challenge" "http://$DEST/.well-known/acme-challenge" 
         ProxyPreserveHost On
 
@@ -121,7 +121,7 @@ redirectsite_nossl () {
     cat > "$FILENAME" <<EOF
 <VirtualHost *:80>
 ServerName $1
-Include sites-available/common-vhost.conf                                                 
+Include sites-available/common-vhost                                                 
 
 RewriteEngine On
 RewriteRule ^/.well-known/acme-challenge - [L]
@@ -141,8 +141,8 @@ redirectsite_ssl () {
 <IfModule mod_ssl.c>
 <VirtualHost *:443>
 ServerName $1
-Include sites-available/ssl.common
-Include sites-available/common-vhost.conf                                                 
+Include sites-available/ssl-common
+Include sites-available/common-vhost                                                 
 RedirectMatch permanent ^(.*)\$ $2\$1
 </VirtualHost>
 </IfModule>

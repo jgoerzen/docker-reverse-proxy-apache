@@ -3,6 +3,7 @@ FROM jgoerzen/debian-base-apache:stretch
 COPY preinit/ /usr/local/preinit/
 COPY conf-available/ /etc/apache2/conf-available/
 COPY sites-available/ /etc/apache2/sites-available/
+COPY scripts/ /usr/local/bin/
 
 RUN a2enmod proxy proxy_http headers rewrite && \
     a2enconf docker-ssl docker-log && \
