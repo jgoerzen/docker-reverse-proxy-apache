@@ -4,9 +4,8 @@ COPY preinit/ /usr/local/preinit/
 COPY conf-available/ /etc/apache2/conf-available/
 COPY sites-available/ /etc/apache2/sites-available/
 
-RUN touch /etc/apache2/authorized-proxies.txt && \
-    a2enconf docker-proxy-client && \
-    a2enmod setenvif remoteip && \
+RUN a2enmod proxy proxy_http headers rewrite && \
+    a2enconf docker-ssl docker-log && \
     apache2ctl configtest && \
     /usr/local/bin/docker-wipelogs
 
