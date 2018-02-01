@@ -13,8 +13,11 @@ with letsencrypt for free and easy SSL/TLS certificates.
 
  - Based on my
    [Debian Apache base](https://github.com/jgoerzen/docker-debian-base),
-   inheriting its features, such as automated security patches for the
-   OS, openssl, and Apache
+   inheriting its features:
+   - automated security patches for the OS, openssl, and Apache
+   - Real init with zombie process reaping
+   - Clean shutdown support
+   - See the above URL for details.
  - Support for automating the process of requesting and updating your
    SSL certificates from letsencrypt, making the process completely
    transparent and automatic - should you wish to use it.
@@ -43,7 +46,8 @@ First, drop a file in `/etc/apache2/sites-available` with a
 `<VirtualHost *:80>` line.  It should include an
 `Include sites-avaialable/common-sites` line to bring in needed
 configuration.  Don't forget to call `RUN a2ensite sitename` in your
-Dockerfile for this.
+Dockerfile for this.  (Of course, you can add as many of these files
+as you like.)
 
 Secondly, you need to define what IPs to authorize as your reverse
 proxy.  You can do this by either setting the `PROXYCLIENT_AUTHORIZED`
