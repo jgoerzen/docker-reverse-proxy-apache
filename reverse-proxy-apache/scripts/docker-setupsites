@@ -12,7 +12,7 @@ proxysite_common () {
     shift 2
     
     if [ -z "$1" ]; then
-	echo "proxysite: missing configuration name or domain list"
+	echo "proxysite: missing configuration name or domain list" >&2
 	exit 5
     fi
 
@@ -155,3 +155,4 @@ redirectsite_both () {
     redirectsite_ssl "$1" "$2"
 }
 
+eval "$@"
