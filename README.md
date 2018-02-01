@@ -9,10 +9,55 @@ both the reverse proxy and the proxy client, and takes the annoying
 parts out of setting this up.  It features optional full integration
 with letsencrypt for free and easy SSL/TLS certificates.
 
+# Feature List
+
+ - Based on my
+   [Debian Apache base](https://github.com/jgoerzen/docker-debian-base),
+   inheriting its features, such as automated security patches for the
+   OS, openssl, and Apache
+ - Support for automating the process of requesting and updating your
+   SSL certificates from letsencrypt, making the process completely
+   transparent and automatic - should you wish to use it.
+ - Low memory requirements and efficient.
+ - Based on Apache, so it's what you (probably) already know.
+
+# Assumptions
+
+You have set up a Docker network of some sort that these systems can
+use.  One easy way is to use `docker net create proxynet` and then
+make sure to say `--net=proxynet` and set a `--name` on your calls to
+`docker run`.
+
 # The proxied application
 
 Let's talk about the proxied application first.  This is where you run
 your web applications -- blogs, wikis, whatever.
+
+## Use
+
+To act as a proper proxied application, your Dockerfile can start with
+`FROM jgoerzen/proxied-app-apache`.  Then, you only need to do two
+things:
+
+First, drop a file in `/etc/apache2/sites-available` with a
+`<VirtualHost *:80>` line.  It should include an
+`Include sites-avaialable/common-sites` line to bring in needed
+configuration.  Don't forget to call `RUN a2ensite sitename` in your
+Dockerfile for this.
+
+Secondly, you need to define what IPs to authorize as your reverse
+proxy.  You can do this by either setting the `PROXYCLIENT_AUTHORIZED`
+environment variable to a single IP address or address plus netmask,
+or replacing the file `/etc/apache2/authorized-proxies.txt` with one
+or more such entries, one per line.  These are sent to the Apache
+[RemoteIPInternalProxyList](https://httpd.apache.org/docs/2.4/mod/mod_remoteip.html#remoteipinternalproxylist)
+directive.  If you are using Docker's default networking, and wish to
+authorize *any* internal host as your source, a common way would be
+`172.16.0.0/12`.  However, it would be more secure to put your systems
+on a separate Docker network and only authorize it.  Even better, give
+your reverse proxy an `--ip` and authorize only that.
+
+## Internal details
 
 There are a couple of interesting issues here.  First, the IP address
 that the request appears to come from is going to be the IP of the
@@ -25,6 +70,9 @@ access the site.  Note that while you could proxy port 443 over to
 your proxied application with these scripts, this setup assumes that
 you terminate SSL at the proxy and use basic HTTP on over to the
 client.
+
+The reverse-proxy-apache setup included here will set both of these
+headers appropriately.
 
 
 
