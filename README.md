@@ -1,4 +1,32 @@
-# Docker web proxy assistance
+# Docker web proxy help
+
+Docker users frequently have a reverse proxy (nginx, haproxy, apache,
+etc) listen for incoming requests on ports 80 and 443, and the
+dispatch them to various workers.
+
+This collection helps streamline this process.  It uses Apache for
+both the reverse proxy and the proxy client, and takes the annoying
+parts out of setting this up.  It features optional full integration
+with letsencrypt for free and easy SSL/TLS certificates.
+
+# The proxied application
+
+Let's talk about the proxied application first.  This is where you run
+your web applications -- blogs, wikis, whatever.
+
+There are a couple of interesting issues here.  First, the IP address
+that the request appears to come from is going to be the IP of the
+reverse proxy or load balancer, not the IP of the browser.  This can
+mess with logging, security, etc.  This uses the `X-Forwarded-For` and
+`X-Forwarded-Proto` headers to propagate the proper remote IP, and set
+the HTTPS variable if relevant.  This lets most web programs properly
+understand what the real remote is, and whether they used SSL to
+access the site.  Note that while you could proxy port 443 over to
+your proxied application with these scripts, this setup assumes that
+you terminate SSL at the proxy and use basic HTTP on over to the
+client.
+
+
 
 # Copyright
 
