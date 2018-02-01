@@ -222,10 +222,10 @@ Dockerfile for both containers, and `VOLUME ["/etc/letsencrypt"]` to
 your reverse proxy container.  When rebuilding and restarting your
 containers, use a sequence such as:
 
-   docker stop web
-   docker rename web web.old
-   docker run <<parameters>> --volumes-from=web.old  --name-web ....
-   docker rm web.old
+    docker stop web
+    docker rename web web.old
+    docker run <<parameters>> --volumes-from=web.old  --name-web ....
+    docker rm web.old
    
 This will let your logs persist, and will avoid unnecessary calls to
 letsencrypt to obtain new certs.  The latter is important to avoid
