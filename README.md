@@ -1,5 +1,7 @@
 # Docker web proxy help
 
+Part of the [docker-apache-proxy](https://github.com/jgoerzen/docker-apache-proxy) colleciton.
+
 Docker users frequently have a reverse proxy (nginx, haproxy, apache,
 etc) listen for incoming requests on ports 80 and 443, and the
 dispatch them to various workers.
