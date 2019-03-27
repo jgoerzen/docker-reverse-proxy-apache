@@ -1,7 +1,0 @@
-#!/bin/bash
-set -e
-
-if [ ! -z "PROXYCLIENT_AUTHORIZED" ]; then
-    echo "Setting authorized proxy list to $1"
-    echo "$PROXYCLIENT_AUTHORIZED" > /etc/apache2/authorized-proxies.txt
-fi
