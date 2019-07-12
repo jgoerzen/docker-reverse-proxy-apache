@@ -23,6 +23,7 @@ certbot \
    --non-interactive
 
 service apache2 stop || true
+killall apache2 &> /dev/null || true
 
 echo "Removing $0"
 rm -v "$0"
