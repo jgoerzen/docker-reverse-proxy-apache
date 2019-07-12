@@ -1,4 +1,4 @@
-FROM jgoerzen/debian-base-apache:stretch
+FROM jgoerzen/debian-base-apache:buster
 
 COPY preinit/ /usr/local/preinit/
 COPY conf-available/ /etc/apache2/conf-available/
