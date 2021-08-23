@@ -1,4 +1,4 @@
-FROM jgoerzen/debian-base-apache:buster
+FROM jgoerzen/debian-base-apache:bullseye
 
 COPY preinit/ /usr/local/preinit/
 COPY conf-available/ /etc/apache2/conf-available/
