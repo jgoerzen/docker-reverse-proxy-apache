@@ -1,6 +1,8 @@
 # Docker web proxy help
 
-Part of the [docker-apache-proxy](https://github.com/jgoerzen/docker-apache-proxy) colleciton.
+**NOTE: This package has moved from Github.  See its [new home on Salsa](https://salsa.debian.org/jgoerzen/docker-apache-proxy).**
+
+Part of the [docker-apache-proxy](https://salsa.debian.org/jgoerzen/docker-apache-proxy) colleciton.
 
 Docker users frequently have a reverse proxy (nginx, haproxy, apache,
 etc) listen for incoming requests on ports 80 and 443, and the
@@ -14,7 +16,7 @@ with letsencrypt for free and easy SSL/TLS certificates.
 # Feature List
 
  - Based on my
-   [Debian Apache base](https://github.com/jgoerzen/docker-debian-base),
+   [Debian Apache base](https://salsa.debian.org/jgoerzen/docker-debian-base),
    inheriting its features:
    - automated security patches for the OS, openssl, and Apache
    - Real init with zombie process reaping
@@ -270,7 +272,7 @@ Additional software copyrights as noted.
 
 # See Also
 
- - [Github page](https://github.com/jgoerzen/docker-apache-proxy)
+ - [Salsa page](https://salsa.debian.org/jgoerzen/docker-apache-proxy)
  - Docker hub packages:
    [jgoerzen/proxied-app-apache](https://hub.docker.com/r/jgoerzen/proxied-app-apache/),
    [jgoerzen/reverse-proxy-apache](https://hub.docker.com/r/jgoerzen/reverse-proxy-apache/)
