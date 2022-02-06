@@ -2,7 +2,7 @@
 
 **NOTE: This package has moved from Github.  See its [new home on Salsa](https://salsa.debian.org/jgoerzen/docker-apache-proxy).**
 
-Part of the [docker-apache-proxy](https://salsa.debian.org/jgoerzen/docker-apache-proxy) colleciton.
+Part of the [docker-apache-proxy](https://salsa.debian.org/jgoerzen/docker-apache-proxy) collection.
 
 Docker users frequently have a reverse proxy (nginx, haproxy, apache,
 etc) listen for incoming requests on ports 80 and 443, and the
