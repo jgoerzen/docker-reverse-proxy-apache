@@ -1,3 +1,4 @@
+# UPDATE CI if changing from bullseye!
 FROM jgoerzen/debian-base-apache:bullseye
 
 COPY preinit/ /usr/local/preinit/
