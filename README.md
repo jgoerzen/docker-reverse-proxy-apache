@@ -215,19 +215,20 @@ Finally, make sure to end your Dockerfile with `CMD ["/usr/local/bin/boot-debian
 
 # Recommended Parameters - Running Container
 
-I recommend you to run your containers with (older systemd, cgroupd v1):
+With a modern systemd, as in Debian bullseye or bookworm on the host:
+
+    docker run -td --stop-signal=SIGRTMIN+3 \
+      --tmpfs /run:size=100M --tmpfs /run/lock:size=100M \
+      -v /sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns=host \
+      --name=name --net=whatever
+
+On a pretty old host, with older systemd and cgroupd v1:
 
     docker run -td --stop-signal=SIGRTMIN+3 \
       --tmpfs /run:size=100M --tmpfs /run/lock:size=100M \
       -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
       --name=name -t -d --net=whatever
       
-Or with a newer systemd, as in Debian bullseye on the host:
-
-    docker run -td --stop-signal=SIGRTMIN+3 \
-      --tmpfs /run:size=100M --tmpfs /run/lock:size=100M \
-      -v /sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns=host \
-      --name=name --net=whatever
 
 # Recommended Volumes
 
