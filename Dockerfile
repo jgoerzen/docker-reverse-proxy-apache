@@ -1,5 +1,5 @@
-# UPDATE CI if changing from bullseye!
-FROM jgoerzen/debian-base-apache:bullseye
+# UPDATE CI if changing from bookworm!
+FROM jgoerzen/debian-base-apache:bookworm
 
 COPY preinit/ /usr/local/preinit/
 COPY conf-available/ /etc/apache2/conf-available/
